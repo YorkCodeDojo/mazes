@@ -66,6 +66,7 @@
     <None Include="up.JPG">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Compile Include="LongestPath.fs" />
     <Compile Include="ShortestPath.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
