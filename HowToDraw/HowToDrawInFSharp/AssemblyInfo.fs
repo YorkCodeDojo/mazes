@@ -1,4 +1,4 @@
-﻿namespace Maze1.AssemblyInfo
+﻿namespace HowToDrawInFSharp.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices
@@ -7,11 +7,11 @@ open System.Runtime.InteropServices
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[<assembly: AssemblyTitle("Maze1")>]
+[<assembly: AssemblyTitle("HowToDrawInFSharp")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("")>]
-[<assembly: AssemblyProduct("Maze1")>]
+[<assembly: AssemblyProduct("HowToDrawInFSharp")>]
 [<assembly: AssemblyCopyright("Copyright ©  2016")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
@@ -22,7 +22,7 @@ open System.Runtime.InteropServices
 [<assembly: ComVisible(false)>]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[<assembly: Guid("5b95f142-8416-49ee-a85a-1741e442c401")>]
+[<assembly: Guid("b6f29758-6509-4357-9b09-0cbf7cfa3d06")>]
 
 // Version information for an assembly consists of the following four values:
 // 

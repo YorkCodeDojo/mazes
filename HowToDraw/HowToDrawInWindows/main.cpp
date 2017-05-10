@@ -1,34 +1,53 @@
 #include <windows.h>
 #include <objidl.h>
 #include <gdiplus.h>
+#include <memory>
+
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
 
-#include <cstdio>
-#include <chrono>
-#include "mazes.h"
-
-HWND                hWnd;
-
+std::shared_ptr<Bitmap> spBitmap;
 VOID OnPaint(HDC hdc)
 {
     Graphics graphics(hdc);
     graphics.SetSmoothingMode(SmoothingMode::SmoothingModeHighQuality);
 
-    RECT rc;
-    GetClientRect(hWnd, &rc);
-    PolarMaze(graphics, rc);
-    //Pen      pen(Color(255, 0, 0, 255));
-    //graphics.DrawLine(&pen, 0, 0, 200, 100);
+    graphics.Clear(Color::WhiteSmoke);
+
+    // Lock the bitmap with the same format, to avoid translation, draw a green line on it, and copy it to the screen.
+    if (spBitmap)
+    {
+        BitmapData data;
+        spBitmap->LockBits(nullptr, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppPARGB, &data);
+
+        for (UINT y = 0; y < data.Height; y++)
+        {
+            auto x = y; //for (auto x = 0; x < data.Width; x++)
+            {
+                // Pixel Maths.... step down by the x stride to the row, then across to the pixel
+                // We work in 4 byte pieces, because each pixel is ARGB
+                uint32_t* pPixel = (uint32_t*)((uint8_t*)data.Scan0 + (y * data.Stride) + (x * 4));
+                *pPixel = 0xFF00FF00;
+            }
+        }
+        spBitmap->UnlockBits(&data);
+        graphics.DrawImage(spBitmap.get(), 0, 0);
+    }
+    Pen linePen(Color::DarkRed);
+    linePen.SetWidth(2);
+
+    //Bitmap bmp(100, 100, &graphics);
+    //bmp.LockBits(nullptr, 0, )
+    //graphics.Draw
+    graphics.DrawLine(&linePen, 10, 10, 200, 200);
+    graphics.DrawRectangle(&linePen, 100, 10, 200, 200);
 }
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-extern const double Radius;
-extern const double MazeBorder;
-
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
 {
+    HWND                hWnd;
     MSG                 msg;
     WNDCLASS            wndClass;
     GdiplusStartupInput gdiplusStartupInput;
@@ -46,23 +65,18 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
     wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wndClass.lpszMenuName = NULL;
-    wndClass.lpszClassName = TEXT("Maze");
+    wndClass.lpszClassName = TEXT("GettingStarted");
 
     RegisterClass(&wndClass);
 
-    // Make a window in the center of the screen, with an square client rect
-    const int WindowSize = 500;
-    int nScreenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int nScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-
     hWnd = CreateWindow(
-        TEXT("Maze"),   // window class name
-        TEXT("Maze"),  // window caption
+        TEXT("GettingStarted"),   // window class name
+        TEXT("Getting Started"),  // window caption
         WS_OVERLAPPEDWINDOW,      // window style
-        (nScreenWidth / 2) - (WindowSize / 2),            // initial x position
-        (nScreenHeight / 2) - (WindowSize / 2),            // initial y position
-        WindowSize,            // initial x size
-        WindowSize + GetSystemMetrics(SM_CYCAPTION),            // initial y size
+        CW_USEDEFAULT,            // initial x position
+        CW_USEDEFAULT,            // initial y position
+        CW_USEDEFAULT,            // initial x size
+        CW_USEDEFAULT,            // initial y size
         NULL,                     // parent window handle
         NULL,                     // window menu handle
         hInstance,                // program instance handle
@@ -71,8 +85,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
     ShowWindow(hWnd, iCmdShow);
     UpdateWindow(hWnd);
 
-    srand(int(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
-
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -80,7 +92,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
     }
 
     GdiplusShutdown(gdiplusToken);
-    return msg.wParam;
+    return int(msg.wParam);
 }  // WinMain
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
@@ -91,12 +103,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 
     switch (message)
     {
+    case WM_SIZE:
+        spBitmap = std::make_shared<Bitmap>(LOWORD(lParam), HIWORD(lParam), PixelFormat32bppPARGB);
+        return 0;
     case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
         OnPaint(hdc);
         EndPaint(hWnd, &ps);
         return 0;
     case WM_DESTROY:
+        spBitmap.reset();
         PostQuitMessage(0);
         return 0;
     default:
